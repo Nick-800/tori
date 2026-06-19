@@ -1,0 +1,44 @@
+syntax = "proto3";
+package torrent;
+
+service TorrentService {
+    // Registers a local file path or magnet link with the daemon
+    rpc AddTorrent(AddTorrentRequest) returns (AddTorrentResponse);
+    
+    // Returns a snapshot list of current active downloads
+    rpc ListTorrents(ListTorrentsRequest) returns (ListTorrentsResponse);
+    
+    // Server-streaming RPC to feed real-time metrics into the TUI Dashboard
+    rpc StreamStatus(StatusRequest) returns (stream StatusUpdate);
+}
+
+message AddTorrentRequest {
+    string target = 1; 
+    bool sequential = 2;
+}
+
+message AddTorrentResponse {
+    string info_hash = 1;
+    bool success = 2;
+}
+
+message ListTorrentsRequest {}
+
+message TorrentStatus {
+    string name = 1;
+    string info_hash = 2;
+    float progress = 3;
+    uint64 download_speed = 4;
+    uint64 upload_speed = 5;
+    uint32 peer_count = 6;
+}
+
+message ListTorrentsResponse {
+    repeated TorrentStatus torrents = 1;
+}
+
+message StatusRequest {}
+
+message StatusUpdate {
+    repeated TorrentStatus torrents = 1;
+}
