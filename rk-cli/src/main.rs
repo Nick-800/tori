@@ -28,7 +28,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    Add { target: String },
+    Add { target: String, magnet: Option<String> },
     List,
     Tui,
 }
@@ -39,8 +39,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut client = TorrentServiceClient::connect("http://[::1]:50051").await?;
 
     match args.command.unwrap_or(Commands::Tui) {
-        Commands::Add { target } => {
-            let res = client.add_torrent(AddTorrentRequest { target, sequential: false }).await?;
+        Commands::Add { target, magnet } => {
+            let res = client.add_torrent(AddTorrentRequest { target, magnet: magnet.unwrap_or_default(), sequential: false }).await?;
             println!("Torrent added. InfoHash: {}", res.into_inner().info_hash);
         }
         Commands::List => {

@@ -5,7 +5,8 @@ use tokio_stream::wrappers::WatchStream;
 use tokio_stream::StreamExt;
 use futures::Stream;
 use std::pin::Pin;
-use tokio_util::sync::CancellationToken;
+use std::str::FromStr;
+use magnet_uri::Magnet;
 use tonic::{transport::Server, Request, Response, Status};
 
 pub mod torrent_proto {
@@ -33,9 +34,25 @@ impl TorrentService for TorrentServerImpl {
         let inner = request.into_inner();
         let mut state = self.state.write().await;
         
+        // Prefer magnet URI if provided
+        let info_hash = if !request.magnet.is_empty() {
+            // Parse magnet URI to extract the info_hash
+            match magnet_uri::Magnet::from_str(&request.magnet) {
+                Ok(m) => m.infohash().to_string(),
+                Err(e) => {
+                    tracing::error!("Failed to parse magnet URI: {}", e);
+                    // fallback to placeholder hash
+                    "invalid".to_string()
+                }
+            }
+        } else {
+            // Existing placeholder hash for non‑magnet torrents
+            "a1b2c3d4e5f67890".to_string()
+        };
+
         let new_torrent = TorrentStatus {
-            name: inner.target.clone(),
-            info_hash: "a1b2c3d4e5f67890".to_string(),
+            name: if !request.magnet.is_empty() { request.magnet.clone() } else { inner.target.clone() },
+            info_hash,
             progress: 0.0,
             download_speed: 0,
             upload_speed: 0,

@@ -13,8 +13,9 @@ service TorrentService {
 }
 
 message AddTorrentRequest {
-    string target = 1; 
+    string target = 1;
     bool sequential = 2;
+    string magnet = 3;
 }
 
 message AddTorrentResponse {
