@@ -6,9 +6,9 @@ edition = "2021"
 [dependencies]
 tokio = { version = "1.35", features = ["full"] }
 tokio-util = { version = "0.7", features = ["codec"] }
-bendy = "0.3"
+bendy = { version = "0.3", features = ["serde"] }
 sha1 = "0.10"
-bytes = "1.0"
+bytes = { version = "1.0", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 thiserror = "1.0"
 tracing = "0.1"
