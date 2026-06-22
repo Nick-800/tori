@@ -3,6 +3,8 @@ use std::time::Duration;
 use tokio::sync::{watch, RwLock};
 use tokio_stream::wrappers::WatchStream;
 use tokio_stream::StreamExt;
+use futures::Stream;
+use std::pin::Pin;
 use tokio_util::sync::CancellationToken;
 use tonic::{transport::Server, Request, Response, Status};
 
@@ -63,14 +65,14 @@ impl TorrentService for TorrentServerImpl {
         }))
     }
 
-    type StreamStatusStream = WatchStream<Result<StatusUpdate, Status>>;
+    type StreamStatusStream = Pin<Box<dyn Stream<Item = Result<StatusUpdate, Status>> + Send>>;
 
     async fn stream_status(
         &self,
         _request: Request<StatusRequest>,
     ) -> Result<Response<Self::StreamStatusStream>, Status> {
         let rx = self.tx.subscribe();
-        let stream = WatchStream::new(rx).map(Ok);
+        let stream = Box::pin(WatchStream::new(rx).map(Ok));
         Ok(Response::new(stream))
     }
 }
